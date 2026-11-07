@@ -1,31 +1,30 @@
-import express from 'express';
+import http from 'http';
+import fs from 'fs';
+import path from 'path';
 import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
 
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+const __dirname = path.dirname(__filename);
 
-const app = express();
 const PORT = process.env.PORT || 3000;
+const htmlFile = path.join(__dirname, 'The-Thousand-Bloom-Wedding-Stage-3D.html');
 
-// Serve the Vite-built React app from dist/
-app.use(express.static(join(__dirname, 'dist'), {
-  maxAge: '1h',
-  etag: true
-}));
-
-// Serve the standalone HTML at /standalone
-app.get('/standalone', (req, res) => {
-  res.sendFile(join(__dirname, 'The-Thousand-Bloom-Wedding-Stage-3D.html'));
+const server = http.createServer((req, res) => {
+  fs.readFile(htmlFile, (err, data) => {
+    if (err) {
+      res.writeHead(500, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.end('Không tìm thấy file The-Thousand-Bloom-Wedding-Stage-3D.html');
+      return;
+    }
+    res.writeHead(200, {
+      'Content-Type': 'text/html; charset=utf-8',
+      'Cache-Control': 'public, max-age=3600'
+    });
+    res.end(data);
+  });
 });
 
-// SPA fallback: serve index.html for any unmatched route
-app.get('*', (req, res) => {
-  res.sendFile(join(__dirname, 'dist', 'index.html'));
-});
-
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`🌸 The Thousand Bloom Wedding 3D is running on port ${PORT}`);
-  console.log(`   React App:   http://localhost:${PORT}/`);
-  console.log(`   Standalone:  http://localhost:${PORT}/standalone`);
+server.listen(PORT, '0.0.0.0', () => {
+  console.log(`🌸 Sân khấu cưới 3D "The Thousand Bloom" đang chạy tại cổng ${PORT}`);
+  console.log(`👉 Truy cập: http://localhost:${PORT}`);
 });
