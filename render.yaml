@@ -1,9 +1,10 @@
 services:
   - type: web
     name: floral-luxury-the-thousand-bloom
-    runtime: node
-    buildCommand: ""
-    startCommand: node server.js
-    envVars:
-      - key: PORT
-        value: 3000
+    runtime: static
+    buildCommand: npm run build
+    staticPublishPath: ./dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

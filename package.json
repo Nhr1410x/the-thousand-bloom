@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node -e \"console.log('Build complete')\"",
+    "build": "node -e \"const fs = require('fs'); fs.mkdirSync('dist', { recursive: true }); fs.copyFileSync('The-Thousand-Bloom-Wedding-Stage-3D.html', 'dist/index.html'); console.log('Build complete: dist/index.html ready');\"",
     "preview": "node server.js",
     "start": "node server.js"
   },
