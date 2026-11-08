@@ -112,6 +112,7 @@
     <button data-v="all" class="on">🎭 Toàn cảnh</button><button data-v="wide">🏛 Góc rộng</button><button
       data-v="hall">🪑 Sảnh tiệc</button><button data-v="back">🌸 Backdrop</button><button data-v="logo">✒
       Logo</button><button data-v="stage">✨ Cận sân khấu</button>
+    <button data-v="foyer">🏛 Sảnh trước</button><button data-v="backstage">🛠 Hậu đài</button>
     <button data-v="right">➡ Hoa phải</button><button data-v="left">⬅ Hoa trái</button>
     <button id="rot">⟳ Tự xoay</button><button id="fly">🎥 Flycam vào sân khấu</button><button id="lt">🌌 Chế độ lễ
       đường</button><button id="shot">📷 Ảnh PNG</button><button id="exp">⬇ Xuất 3D</button>
@@ -123,9 +124,10 @@
   <script>
     const V = THREE.Vector3, cv = document.getElementById('c');
     const R = new THREE.WebGLRenderer({ canvas: cv, antialias: true });
-    const maxRenderPixelRatio = Math.min(devicePixelRatio || 1, 1.5); let renderPixelRatio = maxRenderPixelRatio, frameAverage = 1000 / 60, lastQualityCheck = performance.now();
-    R.setPixelRatio(renderPixelRatio); R.toneMapping = THREE.ACESFilmicToneMapping; R.toneMappingExposure = .9; R.outputEncoding = THREE.sRGBEncoding; R.shadowMap.enabled = true; R.shadowMap.type = THREE.PCFSoftShadowMap;
-    const scene = new THREE.Scene(); scene.background = new THREE.Color(0x8a7170); scene.fog = new THREE.Fog(0x8a7170, 22, 48);
+    const maxRenderPixelRatio = Math.min(devicePixelRatio || 1, 2), minRenderPixelRatio = Math.min(maxRenderPixelRatio, 1); let renderPixelRatio = maxRenderPixelRatio, frameAverage = 1000 / 60, lastQualityCheck = performance.now();
+    // Fixed color pipeline so local and hosted builds use the same exposure and output color space.
+    R.setPixelRatio(renderPixelRatio); R.toneMapping = THREE.ACESFilmicToneMapping; R.toneMappingExposure = .76; R.outputEncoding = THREE.sRGBEncoding; R.physicallyCorrectLights = false; R.shadowMap.enabled = true; R.shadowMap.type = THREE.PCFSoftShadowMap;
+    const scene = new THREE.Scene(); scene.background = new THREE.Color(0x6f5b57); scene.fog = new THREE.Fog(0x6f5b57, 80, 120);
     const cam = new THREE.PerspectiveCamera(50, 1, .1, 80);
     {
       const pm = new THREE.PMREMGenerator(R), es = new THREE.Scene(); es.background = new THREE.Color(0x9a7f7d);
@@ -133,7 +135,7 @@
       lp(0, 9, 0, 10, 10, 0xffffff); lp(0, 4, 10, 8, 4, 0xffe6da); lp(-9, 4, 0, 5, 5, 0xffd9cc); lp(9, 4, 0, 5, 5, 0xffd9cc); lp(0, 2, -10, 12, 5, 0xf5d5cc);
       scene.environment = pm.fromScene(es, .03).texture; pm.dispose()
     }
-    const M = (c, o = {}) => new THREE.MeshStandardMaterial(Object.assign({ color: c, roughness: .8 }, o));
+    const M = (c, o = {}) => new THREE.MeshStandardMaterial(Object.assign({ color: c, roughness: .8, envMapIntensity: .65 }, o));
     const add = (g, m, x, y, z) => { const o = new THREE.Mesh(g, m); o.position.set(x, y, z); scene.add(o); return o };
     const rnd = (a, b) => a + Math.random() * (b - a), pick = a => a[Math.random() * a.length | 0];
     const PINK = [0xf4c2c9, 0xf4c2c9, 0xe79aab, 0xd77f95, 0xfff4ee, 0xfff4ee, 0xfad9d2, 0xe8b7c8, 0xffffff, 0xf0b3bd], GREEN = [0x4f6b3e, 0x5f7d48, 0x728a58, 0x839a67];
@@ -225,7 +227,7 @@
       add(new THREE.PlaneGeometry(40, 44), M(0xc9b8ad, { map: t, roughness: .96, metalness: 0, envMapIntensity: .25 }), 0, 0, 1.5).rotation.x = -Math.PI / 2
     }
     // ---- stage platform + steps
-    const sM = M(0xf8ece7, { emissive: 0x493630, emissiveIntensity: .22, roughness: .84 });
+    const sM = M(0xf8ece7, { emissive: 0x493630, emissiveIntensity: .12, roughness: .84 });
     add(new THREE.BoxGeometry(18.5, .3, 7.8), sM, 0, .15, -5.7);
     [-1, 1].forEach(q => { add(new THREE.BoxGeometry(4.6, .12, 1), sM, q * 5, .06, -1.2); add(new THREE.BoxGeometry(4.6, .22, .6), sM, q * 5, .11, -1.65) });
     // ---- viền sáng sân khấu: hai dải LED vàng ấm và mặt bậc phản quang
@@ -257,7 +259,7 @@
     trim(S, -9.075, .018); trim(Si, -9.05, .008); trim(A, -9.47, .016); trim(A2, -9.405, .011);
     {
       const c = document.createElement('canvas'); c.width = c.height = 256; const x = c.getContext('2d'), g = x.createRadialGradient(128, 128, 20, 128, 128, 128); g.addColorStop(0, 'rgba(255,214,200,.9)'); g.addColorStop(1, 'rgba(255,214,200,0)'); x.fillStyle = g; x.fillRect(0, 0, 256, 256);
-      add(new THREE.PlaneGeometry(12, 11), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: .45 }), 0, 3.6, -9.9)
+      add(new THREE.PlaneGeometry(12, 11), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: .08 }), 0, 3.6, -9.9)
     }
     {
       const W = 2048, H = 1990, c = document.createElement('canvas'); c.width = W; c.height = H; const x = c.getContext('2d'), fx = u => (u + 3.6) / 7.2 * W, fy = v => (7 - v) / 7 * H;
@@ -396,7 +398,8 @@
       // Nền lát riêng cho WC và phòng cô dâu.
       box(5.7, .025, 5.1, -10.9, .018, 18.9, roomFloor); box(5.7, .025, 5.1, 10.9, .018, 18.9, roomFloor);
       // Vách mặt tiền phòng chính với ba bộ cửa đôi dẫn ra tiền sảnh bên ngoài.
-      const entryZ = 15.65, doorCenters = [-6.8, 0, 6.8], doorWidth = 2.6, doorMat = M(0x795c53, { roughness: .58, metalness: .08 });
+      // Gom cả ba bộ cửa vào giữa mặt tiền; chừa khoảng trống trước WC và phòng cô dâu.
+      const entryZ = 15.65, doorCenters = [-5.5, 0, 5.5], doorWidth = 2.4, doorMat = M(0x795c53, { roughness: .58, metalness: .08 });
       let wallStart = -14;
       doorCenters.forEach(center => {
         const left = center - doorWidth / 2, right = center + doorWidth / 2;
@@ -406,10 +409,12 @@
         box(doorWidth + .18, .16, .24, center, 2.75, entryZ, trimM);
         const leaf = (side) => {
           const pivot = new THREE.Group(); pivot.position.set(center, 0, entryZ + .15); scene.add(pivot);
-          const panelW = doorWidth / 2 - .06, park = side * (doorWidth / 2 + panelW / 2 + .18);
+          const panelW = doorWidth / 2 - .3;
+          // Mỗi cánh nằm một bên khung; bộ cửa ngoài đã lùi vào giữa nên không lấn hai phòng.
+          const park = side * (doorWidth / 2 + panelW / 2 + .18);
           const panel = new THREE.Mesh(new THREE.BoxGeometry(panelW, 2.48, .12), doorMat); panel.position.set(park, 1.24, 0); pivot.add(panel);
           const inset = new THREE.Mesh(new THREE.BoxGeometry(panelW - .24, 1.76, .035), M(0x927267, { roughness: .5 })); inset.position.set(park, 1.3, .078); pivot.add(inset);
-          const handle = new THREE.Mesh(new THREE.SphereGeometry(.055, 10, 8), M(0xe5c28b, { metalness: .75, roughness: .25 })); handle.position.set(side * (doorWidth / 2 + .13), 1.14, .12); pivot.add(handle)
+          const handle = new THREE.Mesh(new THREE.SphereGeometry(.055, 10, 8), M(0xe5c28b, { metalness: .75, roughness: .25 })); handle.position.set(park + side * (panelW / 2 - .12), 1.14, .12); pivot.add(handle)
         };
         // Hai cánh trượt gọn sát hai bên khung, giữ thông thoáng lối đi ở giữa.
         leaf(-1); leaf(1);
@@ -444,18 +449,23 @@
       box(3.82, .52, .045, receptionX, .52, 20.16, trimM);
       const sign = document.createElement('canvas'); sign.width = 1024; sign.height = 180; const sx = sign.getContext('2d'); sx.fillStyle = '#76584f'; sx.font = '600 88px Georgia,serif'; sx.textAlign = 'center'; sx.textBaseline = 'middle'; sx.fillText('RECEPTION', 512, 90);
       const signMesh = add(new THREE.PlaneGeometry(3.2, .62), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(sign), transparent: true }), receptionX, .55, 20.19);
+      // Bình hoa nhỏ đặt lệch về đầu quầy, không che bảng tên reception.
+      const vaseX = 4.72, vaseZ = 19.48, vaseMat = M(0x98736f, { metalness: .18, roughness: .38 });
+      add(new THREE.CylinderGeometry(.13, .19, .24, 24), vaseMat, vaseX, 1.12, vaseZ);
+      add(new THREE.CylinderGeometry(.105, .13, .035, 24), trimM, vaseX, 1.255, vaseZ);
+      cluster(vaseX, 1.48, vaseZ, .34, 110, 1, .82, .9); baby(vaseX, 1.53, vaseZ, .32, .22, .28, 65, .022);
       // Nhãn phòng nổi hướng về hành lang giữa.
       const tag = (label, x, z) => { const c = document.createElement('canvas'); c.width = 512; c.height = 128; const q = c.getContext('2d'); q.fillStyle = '#71544c'; q.font = '600 52px Segoe UI,sans-serif'; q.textAlign = 'center'; q.textBaseline = 'middle'; q.fillText(label, 256, 64); const m = add(new THREE.PlaneGeometry(1.9, .46), new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), transparent: true }), x, 2.05, z); m.rotation.y = x < 0 ? Math.PI / 2 : -Math.PI / 2 };
       tag('WC', -7.95, 18.9); tag('PHÒNG CÔ DÂU', 7.95, 18.9);
     }
     finalize();
     // ---- lights
-    const ambient = new THREE.AmbientLight(0xffe8dc, .22), hemi = new THREE.HemisphereLight(0xfff0e8, 0x6a5250, .22); scene.add(ambient, hemi);
-    const sun = new THREE.DirectionalLight(0xfff1e6, .85); sun.position.set(5, 10, 7); sun.target.position.set(0, 1.5, -5); scene.add(sun, sun.target); sun.castShadow = true; sun.shadow.mapSize.set(1024, 1024);
+    const ambient = new THREE.AmbientLight(0xffe8dc, .12), hemi = new THREE.HemisphereLight(0xfff0e8, 0x6a5250, .16); scene.add(ambient, hemi);
+    const sun = new THREE.DirectionalLight(0xfff1e6, .58); sun.position.set(5, 10, 7); sun.target.position.set(0, 1.5, -5); scene.add(sun, sun.target); sun.castShadow = true; sun.shadow.mapSize.set(1024, 1024);
     { const c = sun.shadow.camera; c.left = -12; c.right = 12; c.top = 9; c.bottom = -6; c.near = 1; c.far = 32 } sun.shadow.bias = -.0006; sun.shadow.radius = 3;
-    const sp = [];[-3, 0, 3].forEach(x => { const s = new THREE.SpotLight(0xffe9dc, 2.1, 30, .82, .72, 1); s.position.set(x * 1.4, 7, -2.05); s.target.position.set(x, 3.2, -5.8); scene.add(s, s.target); sp.push(s) });
+    const sp = [];[-3, 0, 3].forEach(x => { const s = new THREE.SpotLight(0xffe9dc, 1.3, 28, .82, .72, 1); s.position.set(x * 1.4, 7, -2.05); s.target.position.set(x, 3.2, -5.8); scene.add(s, s.target); sp.push(s) });
     // Ánh sáng nền riêng cho sân khấu luôn bật, giữ phông và mặt sàn rõ ở mọi góc nhìn.
-    const stageFill = [];[-6, 0, 6].forEach(x => { const l = new THREE.PointLight(0xffdfcb, 1.15, 19, 1.5); l.position.set(x, 4.4, -4.5); scene.add(l); stageFill.push(l) });
+    const stageFill = [];[-6, 0, 6].forEach(x => { const l = new THREE.PointLight(0xffdfcb, .72, 17, 1.5); l.position.set(x, 4.4, -4.5); scene.add(l); stageFill.push(l) });
     // Giàn đèn phía trước backdrop với chóa đèn và các luồng sáng nhìn thấy được.
     const trussM = M(0x6d5550, { metalness: .72, roughness: .3 }), lampBody = M(0x342b2b, { metalness: .62, roughness: .28 }), lampGlass = new THREE.MeshBasicMaterial({ color: 0xffe4c6 });
     add(new THREE.BoxGeometry(10.8, .12, .14), trussM, 0, 7.25, -2.05);
@@ -467,8 +477,8 @@
     const beams = [];
     sp.forEach((s, i) => {
       const origin = s.position.clone(), target = s.target.position.clone(), dir = origin.clone().sub(target), len = dir.length();
-      const beam = new THREE.Mesh(new THREE.ConeGeometry(.8, len, 24, 1, true), new THREE.MeshBasicMaterial({ color: [0xffdfc2, 0xffe9d5, 0xffd6c3][i], transparent: true, opacity: .05, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending }));
-      beam.position.copy(origin).add(target).multiplyScalar(.5); beam.quaternion.setFromUnitVectors(new V(0, 1, 0), dir.normalize()); scene.add(beam); beams.push(beam);
+      const beam = new THREE.Mesh(new THREE.ConeGeometry(.8, len, 24, 1, true), new THREE.MeshBasicMaterial({ color: [0xffdfc2, 0xffe9d5, 0xffd6c3][i], transparent: true, opacity: .015, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending }));
+      beam.position.copy(origin).add(target).multiplyScalar(.5); beam.quaternion.setFromUnitVectors(new V(0, 1, 0), dir.normalize()); beam.visible = false; scene.add(beam); beams.push(beam);
       const lamp = add(new THREE.CylinderGeometry(.25, .3, .34, 18), lampBody, origin.x, 6.68, origin.z); lamp.rotation.x = Math.PI / 2;
       const lens = add(new THREE.CircleGeometry(.19, 24), lampGlass, origin.x, 6.68, origin.z - .19); lens.rotation.y = Math.PI;
     });
@@ -480,13 +490,13 @@
     });
     // Đèn hắt cố định hai rìa sân khấu, luôn hướng vào phông nền và không phụ thuộc camera.
     const backdropSpots = [];[-1, 1].forEach(side => [-1, 1].forEach(inner => {
-      const x = side * (inner < 0 ? 7.8 : 6.5), l = new THREE.SpotLight(0xffd9bd, 1.35, 13, .72, .82, 1);
+      const x = side * (inner < 0 ? 7.8 : 6.5), l = new THREE.SpotLight(0xffd9bd, .82, 12, .72, .82, 1);
       l.position.set(x, .48, -8.35); l.target.position.set(side * (inner < 0 ? 5.2 : 2.3), 3.2, -9.35); scene.add(l, l.target); backdropSpots.push(l);
       const base = add(new THREE.CylinderGeometry(.17, .21, .22, 16), lampBody, x, .19, -8.35); base.rotation.x = Math.PI / 2;
       const lens = add(new THREE.CircleGeometry(.13, 18), lampGlass, x, .19, -8.48); lens.rotation.x = -Math.PI / 2;
     }));
     const aisleSpots = [];[1.5, 6, 10.5, 15].forEach(z => { const l = new THREE.SpotLight(0xffd8b2, 0, 10, .46, .82, 1); l.position.set(0, 7.5, z); l.target.position.set(0, .3, z); scene.add(l, l.target); aisleSpots.push(l) });
-    const hallPoints = [];[[0, 3, -5, .65], [-3, 1.5, -4.2, .5], [4.6, 1.5, -4.2, .5], [0, 2, 2, .35]].forEach(p => { const l = new THREE.PointLight(0xffd9c8, p[3], 12, 1.6); l.position.set(p[0], p[1], p[2]); l.userData.normalIntensity = p[3]; scene.add(l); hallPoints.push(l) });
+    const hallPoints = [];[[0, 3, -5, .26], [-3, 1.5, -4.2, .2], [4.6, 1.5, -4.2, .2], [0, 2, 2, .14]].forEach(p => { const l = new THREE.PointLight(0xffd9c8, p[3], 12, 1.6); l.position.set(p[0], p[1], p[2]); l.userData.normalIntensity = p[3]; scene.add(l); hallPoints.push(l) });
     // Hạt sáng phía trên sảnh nhấp nháy như trần sao, chỉ bật cùng chế độ lễ đường.
     const starCount = 1700, starPositions = new Float32Array(starCount * 3), starBasePositions = new Float32Array(starCount * 3), starDrifts = new Float32Array(starCount * 3), starColors = new Float32Array(starCount * 3), starPhases = new Float32Array(starCount), starSpeeds = new Float32Array(starCount);
     for (let i = 0; i < starCount; i++) { const x = rnd(-13.3, 13.3), y = rnd(7.2, 9.1), z = rnd(-8.5, 20.5); starPositions[i * 3] = starBasePositions[i * 3] = x; starPositions[i * 3 + 1] = starBasePositions[i * 3 + 1] = y; starPositions[i * 3 + 2] = starBasePositions[i * 3 + 2] = z; starDrifts[i * 3] = rnd(.04, .24); starDrifts[i * 3 + 1] = rnd(.06, .3); starDrifts[i * 3 + 2] = rnd(.05, .28); starPhases[i] = rnd(0, Math.PI * 2); starSpeeds[i] = rnd(.7, 2.2); starColors[i * 3] = .65; starColors[i * 3 + 1] = .46; starColors[i * 3 + 2] = .3 }
@@ -539,7 +549,7 @@
         await DLS.save({ filename: 'lora-wedding-stage-3d.zip', data: blob })
       } catch (e) { if (!e || e.code !== 'declined') { say('Xuất 3D thất bại'); console.error(e) } setTimeout(() => say(''), 3000) } exp.disabled = false
     };
-    const VIEWS = { all: [0, .8, 3.5, 0, 1.17, 34], wide: [0, .5, 3.5, 0, .92, 35], back: [0, 3.6, -6.5, 0, 1.5, 9.5], logo: [0, 4.3, -6.2, 0, 1.52, 6], stage: [0, 2.6, -4.4, 0, 1.35, 8.5], right: [5, 3, -5.5, -.35, 1.5, 7], left: [-4.5, 2.8, -5.5, .4, 1.5, 7], hall: [0, .8, 3, .5, .85, 19] };
+    const VIEWS = { all: [0, .8, 3.5, 0, 1.17, 34], wide: [0, .5, 3.5, 0, .92, 35], back: [0, 3.6, -6.5, 0, 1.5, 9.5], logo: [0, 4.3, -6.2, 0, 1.52, 6], stage: [0, 2.6, -4.4, 0, 1.35, 8.5], right: [5, 3, -5.5, -.35, 1.5, 7], left: [-4.5, 2.8, -5.5, .4, 1.5, 7], hall: [0, .8, 3, .5, .85, 19], foyer: [0, 1.8, 19.5, 0, 1.43, 22], backstage: [0, 1.2, -15.5, 0, .35, 23] };
     const cur = { t: new V(0, .8, 3.5), th: 0, ph: 1.17, r: 34 }, goal = { t: new V(0, .8, 3.5), th: 0, ph: 1.17, r: 34 };
     const flyButton = document.getElementById('fly'), flyPositions = new THREE.CatmullRomCurve3([new V(0, 1.75, 29), new V(-.15, 1.72, 19), new V(0, 1.72, 11), new V(.12, 1.8, 4), new V(0, 2, -2), new V(0, 2.25, -5.8)]), flyTargets = new THREE.CatmullRomCurve3([new V(0, 1.5, 12), new V(0, 1.55, 5), new V(0, 1.75, -2), new V(0, 2.05, -8), new V(0, 2.4, -9.5), new V(0, 2.5, -9.5)]);
     let flyTourActive = false, flyTourStart = 0, flyLook = new V(); const flyDuration = 18000;
@@ -552,12 +562,13 @@
     flyButton.onclick = () => { if (flyTourActive) { stopFlyTour(); return } auto = false; rot.classList.remove('on'); flyTourStart = performance.now(); flyTourActive = true; flyButton.classList.add('on'); flyButton.textContent = '⏹ Dừng Flycam' };
     lt.onclick = () => {
       theaterMode = !theaterMode; lt.classList.toggle('on', theaterMode); lt.textContent = theaterMode ? '🌠 Trở lại sảnh sáng' : '🌌 Chế độ lễ đường';
-      ambient.intensity = theaterMode ? .025 : .22; hemi.intensity = theaterMode ? .02 : .22; sun.intensity = theaterMode ? .01 : .85;
+      ambient.intensity = theaterMode ? .025 : .12; hemi.intensity = theaterMode ? .02 : .16; sun.intensity = theaterMode ? .01 : .58;
       lampGlass.color.setHex(theaterMode ? 0xffe4c6 : 0x453534);
-      sp.forEach(s => s.intensity = theaterMode ? 0 : 2.1); beams.forEach(b => b.visible = !theaterMode);
+      sp.forEach(s => s.intensity = theaterMode ? 0 : 1.3); beams.forEach(b => b.visible = false);
+      backdropSpots.forEach(s => s.intensity = theaterMode ? 1.0 : .82);
       focusSpots.forEach(s => s.intensity = theaterMode ? 4.0 : 0); focusBeams.forEach(b => b.visible = theaterMode); aisleSpots.forEach(s => s.intensity = theaterMode ? 1.8 : 0);
       hallPoints.forEach(l => l.intensity = theaterMode ? .012 : l.userData.normalIntensity);
-      candleMeshes.forEach(m => m.material.emissiveIntensity = theaterMode ? .025 : .38);
+      candleMeshes.forEach(m => m.material.emissiveIntensity = theaterMode ? .025 : .2);
       runwayGlow.forEach(m => { m.emissive.setHex(theaterMode ? 0xff8e48 : 0x000000); m.emissiveIntensity = theaterMode ? .45 : 0 });
       starPoints.visible = theaterMode; sparkPoints.visible = theaterMode; scene.environment = theaterMode ? null : normalEnvironment; scene.background.copy(theaterMode ? new THREE.Color(0x09080d) : normalBackground); scene.fog.color.copy(theaterMode ? new THREE.Color(0x09080d) : normalFog)
     };
@@ -569,7 +580,7 @@
     addEventListener('resize', resize); resize();
     (function loop() {
       requestAnimationFrame(loop); const now = performance.now(), elapsed = now - (loop.last || now); loop.last = now; loop.accumulator = (loop.accumulator || 0) + (elapsed > 100 ? 1000 / 60 : elapsed); if (loop.accumulator < 1000 / 60) return; const frameMs = loop.accumulator; loop.accumulator -= 1000 / 60; const dt = Math.min(.05, frameMs / 1000);
-      frameAverage = frameAverage * .9 + frameMs * .1; if (now - lastQualityCheck > 1400) { let nextRatio = renderPixelRatio; if (frameAverage > 22.2) nextRatio = Math.max(.75, renderPixelRatio - .2); else if (frameAverage < 17.3) nextRatio = Math.min(maxRenderPixelRatio, renderPixelRatio + .1); if (nextRatio !== renderPixelRatio) { renderPixelRatio = nextRatio; R.setPixelRatio(renderPixelRatio) } lastQualityCheck = now }
+      frameAverage = frameAverage * .9 + frameMs * .1; if (now - lastQualityCheck > 1400) { let nextRatio = renderPixelRatio; if (frameAverage > 22.2) nextRatio = Math.max(minRenderPixelRatio, renderPixelRatio - .2); else if (frameAverage < 17.3) nextRatio = Math.min(maxRenderPixelRatio, renderPixelRatio + .1); if (nextRatio !== renderPixelRatio) { renderPixelRatio = nextRatio; R.setPixelRatio(renderPixelRatio) } lastQualityCheck = now }
       const t = now * .001; for (let i = 0; i < fallCount; i++) { const f = fallData[i]; f.y -= f.speed * dt; if (f.y < .28) { f.y = rnd(3.8, 5.8); f.x = rnd(-1.05, 1.05); f.z = rnd(-1.3, 15.1) } const fx = f.x + Math.sin(t + f.phase) * .16, fy = f.y, fz = f.z + Math.cos(t * .7 + f.phase) * .12; fallDummy.position.set(fx, fy, fz); fallDummy.rotation.set(.16 * Math.sin(t + f.phase), f.phase + t * .45, .12 * Math.cos(t * .8 + f.phase)); fallDummy.scale.setScalar(f.scale); fallDummy.updateMatrix(); fallMesh.setMatrixAt(i, fallDummy.matrix); fallGlowPositions[i * 3] = fx; fallGlowPositions[i * 3 + 1] = fy; fallGlowPositions[i * 3 + 2] = fz } fallMesh.instanceMatrix.needsUpdate = true; fallGlowGeo.attributes.position.needsUpdate = true;
       for (let i = 0; i < sparkCount; i++) { const p = sparkData[i]; p.age += dt; if (p.age >= p.life) resetSpark(p); const age = p.age; sparkPositions[i * 3] = p.x + p.vx * age; sparkPositions[i * 3 + 1] = p.y + p.vy * age - 1.7 * age * age; sparkPositions[i * 3 + 2] = p.z + p.vz * age; const fade = 1 - age / p.life; sparkColors[i * 3] = fade; sparkColors[i * 3 + 1] = fade * .62; sparkColors[i * 3 + 2] = fade * .24 } sparkGeo.attributes.position.needsUpdate = true; sparkGeo.attributes.color.needsUpdate = true;
       if (auto) goal.th += .003;
